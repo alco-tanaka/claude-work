@@ -1,4 +1,4 @@
-  """ネクストエンジンAPIクライアント (リトライ付き)"""
+"""ネクストエンジンAPIクライアント (リトライ付き)"""
   import os, time, requests
   from pathlib import Path
   from typing import Any, Dict
