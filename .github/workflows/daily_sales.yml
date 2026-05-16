@@ -1,0 +1,31 @@
+name: Next Engine 売上速報
+
+on:
+  schedule:
+    - cron: '30 23 * * *'  # 毎日 23:30 UTC = 翌 8:30 JST
+  workflow_dispatch:        # 手動実行ボタンも有効化
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: next-engine-sales
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run daily sales report
+        env:
+          NE_ACCESS_TOKEN:  ${{ secrets.NE_ACCESS_TOKEN }}
+          NE_REFRESH_TOKEN: ${{ secrets.NE_REFRESH_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: python daily_sales.py
