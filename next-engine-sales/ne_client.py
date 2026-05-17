@@ -1,5 +1,5 @@
 """ネクストエンジンAPIクライアント (リトライ付き)"""
-import os, time, requests
+import os, time, requests, json
 from pathlib import Path
 from typing import Any, Dict
 
@@ -24,7 +24,14 @@ def load_env() -> Dict[str, str]:
     return env
 
 def save_tokens(access_token: str, refresh_token: str) -> None:
-    # クラウド環境では.envへの書き戻しをスキップ
+    # GitHub Actions環境: 一時ファイルに書き出し（後続ステップでSecretsを更新）
+    token_output = os.environ.get("NE_TOKEN_OUTPUT")
+    if token_output:
+        Path(token_output).write_text(
+            json.dumps({"access_token": access_token, "refresh_token": refresh_token}),
+            encoding="utf-8"
+        )
+    # ローカル環境: .envへの書き戻し
     if not ENV_PATH.exists():
         return
     last_err = None

@@ -28,4 +28,16 @@ jobs:
           NE_ACCESS_TOKEN:  ${{ secrets.NE_ACCESS_TOKEN }}
           NE_REFRESH_TOKEN: ${{ secrets.NE_REFRESH_TOKEN }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          NE_TOKEN_OUTPUT: /tmp/ne_tokens.json
         run: python daily_sales.py
+
+      - name: Refresh NE tokens in Secrets
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          if [ -f /tmp/ne_tokens.json ]; then
+            gh secret set NE_ACCESS_TOKEN --body "$(jq -r .access_token /tmp/ne_tokens.json)"
+            gh secret set NE_REFRESH_TOKEN --body "$(jq -r .refresh_token /tmp/ne_tokens.json)"
+            echo "NEトークンをSecretsに更新しました"
+          fi
