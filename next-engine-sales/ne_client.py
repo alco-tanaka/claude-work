@@ -15,7 +15,8 @@ def load_env() -> Dict[str, str]:
             k, _, v = line.partition("=")
             env[k.strip()] = v.strip()
     for key in ["NE_ACCESS_TOKEN", "NE_REFRESH_TOKEN", "NE_CLIENT_ID",
-                "NE_CLIENT_SECRET", "NE_REDIRECT_URI", "SLACK_WEBHOOK_URL"]:
+                "NE_CLIENT_SECRET", "NE_REDIRECT_URI", "SLACK_WEBHOOK_URL",
+                "SLACK_WEBHOOK_URL_WEBDIV"]:
         val = os.environ.get(key)
         if val:
             env[key] = val

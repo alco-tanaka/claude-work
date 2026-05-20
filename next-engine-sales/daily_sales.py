@@ -131,10 +131,12 @@ def build_report():
     return "\n".join(L)
 
 def post_to_slack(text):
-    url = load_env().get("SLACK_WEBHOOK_URL")
-    if not url: raise RuntimeError(".env に SLACK_WEBHOOK_URL がありません")
-    r = requests.post(url, json={"text": text, "mrkdwn": True}, timeout=30)
-    if r.status_code != 200: raise RuntimeError(f"Slack投稿失敗: {r.status_code} {r.text}")
+    env = load_env()
+    urls = [v for k, v in env.items() if k.startswith("SLACK_WEBHOOK_URL") and v]
+    if not urls: raise RuntimeError(".env に SLACK_WEBHOOK_URL がありません")
+    for url in urls:
+        r = requests.post(url, json={"text": text, "mrkdwn": True}, timeout=30)
+        if r.status_code != 200: raise RuntimeError(f"Slack投稿失敗: {r.status_code} {r.text}")
 
 def main():
     preview = "--preview" in sys.argv
