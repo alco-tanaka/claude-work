@@ -103,7 +103,7 @@ def ne_post(endpoint: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
         data = resp.json()
 
     na, nr = data.get("access_token"), data.get("refresh_token")
-    if na and nr and (na != env.get("NE_ACCESS_TOKEN") or nr != env.get("NE_REFRESH_TOKEN")):
+    if na and nr:
         save_tokens(na, nr)
     if data.get("result") == "error":
         raise RuntimeError(f"NE API error: {data.get('code')} {data.get('message')}")
