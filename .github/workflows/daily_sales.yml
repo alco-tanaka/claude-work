@@ -2,7 +2,7 @@ name: Next Engine 売上速報
 
 on:
   schedule:
-    - cron: '30 23 * * *'  # 毎日 23:30 UTC = 翌 8:30 JST
+    - cron: '30 21 * * *'  # 毎日 21:30 UTC（約2h遅延を見込み） = 翌 8:30 JST 着
   workflow_dispatch:        # 手動実行ボタンも有効化
 
 jobs:
