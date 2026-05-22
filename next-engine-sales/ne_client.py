@@ -44,6 +44,10 @@ def _update_github_secret(pat: str, repo: str, name: str, value: str) -> None:
         print(f"[警告] GitHub Secrets更新失敗 ({name}): {e}")
 
 def save_tokens(access_token: str, refresh_token: str) -> None:
+    # 同プロセス内の後続APIコールが更新済みトークンを使えるよう即時反映
+    os.environ["NE_ACCESS_TOKEN"] = access_token
+    os.environ["NE_REFRESH_TOKEN"] = refresh_token
+
     # GitHub Actions環境: 一時ファイルに書き出し（後続ステップでSecretsを更新）
     token_output = os.environ.get("NE_TOKEN_OUTPUT")
     if token_output:
