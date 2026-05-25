@@ -1,0 +1,33 @@
+name: GA4 月次レポート
+
+on:
+  schedule:
+    - cron: '0 0 1 * *'  # 毎月1日 00:00 UTC = 09:00 JST
+  workflow_dispatch:       # 手動実行ボタン
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: analytics
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run monthly report
+        env:
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+          SLACK_WEBHOOK_PROD: ${{ secrets.SLACK_WEBHOOK_WEBDIV }}
+          SLACK_WEBHOOK_TEST: ${{ secrets.SLACK_WEBHOOK_AI_KATSU }}
+          SPREADSHEET_ID: ${{ secrets.GA_SPREADSHEET_ID }}
+          DRIVE_FOLDER_ID: ${{ secrets.GA_DRIVE_FOLDER_ID }}
+        run: python monthly_report.py
