@@ -28,7 +28,6 @@ jobs:
           NE_ACCESS_TOKEN:  ${{ secrets.NE_ACCESS_TOKEN }}
           NE_REFRESH_TOKEN: ${{ secrets.NE_REFRESH_TOKEN }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_WEBHOOK_URL_WEBDIV: ${{ secrets.SLACK_WEBHOOK_URL_WEBDIV }} 
           NE_TOKEN_OUTPUT: /tmp/ne_tokens.json
         run: python daily_sales.py
 
