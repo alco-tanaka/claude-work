@@ -1,0 +1,35 @@
+output_dir: "G:\\共有ドライブ\\820_board\\006　AI\\tanaka\\ai_office\\data\\outputs"
+
+anomaly:
+  spike_threshold: 2.5   # 過去28日平均の2.5倍以上でアラート
+  drop_threshold: 0.4    # 過去28日平均の40%以下でアラート
+
+sites:
+  - name: "ALCO online"
+    property_id: "260235946"
+  - name: "Body Glideオフィシャルサイト"
+    property_id: "379237335"
+  - name: "bonicoオンラインショップ楽天市場店"
+    property_id: "384737206"
+  - name: "Ciele Athleticsオフィシャルサイト"
+    property_id: "391529847"
+  - name: "cotopaxiオフィシャルサイト"
+    property_id: "321966527"
+  - name: "feeturesオフィシャルサイト"
+    property_id: "321990864"
+  - name: "HydroFlaskオフィシャルサイト"
+    property_id: "321732797"
+  - name: "Hypericeオフィシャルサイト"
+    property_id: "443690054"
+  - name: "Nocs Provisions Japan"
+    property_id: "411739573"
+  - name: "Nomadixオフィシャルサイト"
+    property_id: "321957235"
+  - name: "OOFOSオフィシャルサイト"
+    property_id: "321977751"
+  - name: "OTIS Eyewear Japan"
+    property_id: "528567944"
+  - name: "Sun Bum JAPAN"
+    property_id: "526067070"
+  - name: "TOPO ATHLETICオフィシャルサイト"
+    property_id: "322001880"
