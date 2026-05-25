@@ -1,0 +1,31 @@
+name: GA4 異常検知
+
+on:
+  schedule:
+    - cron: '0 23 * * *'  # 毎日 23:00 UTC = 翌 08:00 JST
+  workflow_dispatch:        # 手動実行ボタン
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: analytics
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run anomaly check
+        env:
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+          SLACK_WEBHOOK_PROD: ${{ secrets.SLACK_WEBHOOK_WEBDIV }}
+          SLACK_WEBHOOK_TEST: ${{ secrets.SLACK_WEBHOOK_AI_KATSU }}
+        run: python anomaly_check.py
