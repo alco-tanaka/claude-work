@@ -16,47 +16,19 @@ from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN
 
-# ── 日本語フォント ──
-def _setup_jp_font():
-    import pathlib, glob as _g, matplotlib as _mpl
-
-    # 1. matplotlib のディスクキャッシュを削除（古いキャッシュで IPA が認識されない問題を回避）
-    try:
-        for _fc in pathlib.Path(_mpl.get_cachedir()).glob('fontlist-v*.json'):
-            _fc.unlink()
-    except Exception:
-        pass
-
-    # 2. japanize_matplotlib のバンドルフォントを直接登録
-    try:
-        import japanize_matplotlib as _jm
-        _pkg = pathlib.Path(_jm.__file__).parent
-        for _f in list(_pkg.glob('**/*.ttf')) + list(_pkg.glob('**/*.otf')):
-            fm.fontManager.addfont(str(_f))
-    except Exception:
-        pass
-
-    # 3. システムフォント（packages.txt: fonts-ipafont-gothic）も登録
-    for _f in (_g.glob('/usr/share/fonts/**/*.ttf', recursive=True) +
-               _g.glob('/usr/share/fonts/**/*.otf', recursive=True)):
-        if 'ipa' in _f.lower():
-            fm.fontManager.addfont(_f)
-
-    # 4. 優先順位で family を設定
-    _avail = {f.name for f in fm.fontManager.ttflist}
-    for _name in ['IPAexGothic', 'IPAGothic', 'IPAPGothic',
-                  'Yu Gothic', 'Meiryo', 'MS Gothic']:
-        if _name in _avail:
-            plt.rcParams['font.family'] = _name
-            return
-    # 部分一致フォールバック
-    for _kw in ['ipaex', 'ipa', 'gothic', 'yu gothic', 'meiryo']:
-        _hits = [f for f in fm.fontManager.ttflist if _kw in f.name.lower()]
+# ── 日本語フォント（リポジトリ同梱の ipaexg.ttf を直接指定）──
+import pathlib as _pl
+_FONT_PATH = str(_pl.Path(__file__).parent / 'fonts' / 'ipaexg.ttf')
+if _pl.Path(_FONT_PATH).exists():
+    fm.fontManager.addfont(_FONT_PATH)
+    plt.rcParams['font.family'] = fm.FontProperties(fname=_FONT_PATH).get_name()
+else:
+    # ローカル開発環境フォールバック（Windows）
+    for _c in ['Yu Gothic', 'Meiryo', 'MS Gothic']:
+        _hits = [f for f in fm.fontManager.ttflist if _c.lower() in f.name.lower()]
         if _hits:
             plt.rcParams['font.family'] = _hits[0].name
-            return
-
-_setup_jp_font()
+            break
 plt.rcParams['axes.unicode_minus'] = False
 
 C_TEAL='#0DB4C6'; C_DARK='#1A2535'; C_GOLD='#F5A623'; C_GREEN='#27AE60'
