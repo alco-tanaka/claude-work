@@ -57,6 +57,8 @@ def load(file_obj):
         df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0)
     df['isD'] = df['旧在庫区分'] == 'D'
     df['月'] = df['実績年月'].dt.month.astype(str) + '月'
+    # 店舗名の統一（名称変更で別店舗に見えるケースを統合）
+    df['得意先'] = df['得意先'].replace({'Fav_Our_Planet': 'ALCO online'})
     return df
 
 # ══════════════════════════════════════
@@ -262,20 +264,26 @@ def ch_category(cat25, cat26):
     all_cats = list(dict.fromkeys([t[0] for t in cat26]+[t[0] for t in cat25]))
     v25 = [next((v for n,v in cat25 if n==c),0) for c in all_cats]
     v26 = [next((v for n,v in cat26 if n==c),0) for c in all_cats]
-    fig, ax = plt.subplots(figsize=(8.5, 4.5), facecolor='white')
-    x = np.arange(len(all_cats)); w = 0.35
+    n = len(all_cats)
+    rot  = 40 if n > 5 else 0
+    fs   = max(9, 12 - max(0, n - 5))   # カテゴリ数に応じてフォントを縮小
+    figh = 5.5 if rot else 4.5           # ラベルが斜めの場合は下余白を確保
+    fig, ax = plt.subplots(figsize=(8.5, figh), facecolor='white')
+    x = np.arange(n); w = 0.35
     ax.bar(x-w/2, v25, w, label='前年', color=C_GRAY, alpha=0.65, zorder=3)
     b2 = ax.bar(x+w/2, v26, w, label='今年', color=C_TEAL, alpha=0.85, zorder=3)
-    for bar, v in zip(ax.patches[:len(all_cats)], v25):
+    for bar, v in zip(ax.patches[:n], v25):
         ax.text(bar.get_x()+bar.get_width()/2, bar.get_height()+0.4,
-                f'{v:.1f}%', ha='center', fontsize=11, color=C_DARK)
+                f'{v:.1f}%', ha='center', fontsize=fs, color=C_DARK)
     for bar, v, v0 in zip(b2, v26, v25):
         diff = v-v0
         ax.text(bar.get_x()+bar.get_width()/2, bar.get_height()+0.4,
                 f'{v:.1f}%'+(f'\n({diff:+.1f}pt)' if abs(diff)>0.5 else ''),
-                ha='center', fontsize=11,
+                ha='center', fontsize=fs,
                 color=C_GREEN if diff>0.5 else (C_RED if diff<-0.5 else C_DARK), fontweight='bold')
-    ax.set_xticks(x); ax.set_xticklabels(all_cats, fontsize=12)
+    ax.set_xticks(x)
+    ax.set_xticklabels(all_cats, fontsize=fs+1, rotation=rot,
+                       ha='right' if rot else 'center')
     ax.set_ylabel('構成比（%）', fontsize=12); ax.legend(fontsize=12)
     ax.set_ylim(0, max(max(v25),max(v26))+12)
     ax.grid(axis='y', alpha=0.3, zorder=1); ax.spines[['top','right']].set_visible(False)
