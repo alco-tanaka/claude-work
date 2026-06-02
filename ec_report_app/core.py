@@ -265,11 +265,11 @@ def ch_category(cat25, cat26):
     v25 = [next((v for n,v in cat25 if n==c),0) for c in all_cats]
     v26 = [next((v for n,v in cat26 if n==c),0) for c in all_cats]
 
-    # 前年・今年どちらも1%未満のカテゴリを「その他」に束ねる
+    # 前年・今年どちらも5%未満のカテゴリを「その他」に束ねる
     main_cats, main_v25, main_v26 = [], [], []
     oth25 = oth26 = 0.0
     for c, a, b in zip(all_cats, v25, v26):
-        if max(a, b) >= 1.0:
+        if max(a, b) >= 5.0:
             main_cats.append(c); main_v25.append(a); main_v26.append(b)
         else:
             oth25 += a; oth26 += b
@@ -285,20 +285,26 @@ def ch_category(cat25, cat26):
     x = np.arange(n); w = 0.35
     ax.bar(x-w/2, v25, w, label='前年', color=C_GRAY, alpha=0.65, zorder=3)
     b2 = ax.bar(x+w/2, v26, w, label='今年', color=C_TEAL, alpha=0.85, zorder=3)
+    # 前年ラベル（小さめで補足表示）
     for bar, v in zip(ax.patches[:n], v25):
-        ax.text(bar.get_x()+bar.get_width()/2, bar.get_height()+0.4,
-                f'{v:.1f}%', ha='center', fontsize=fs, color=C_DARK)
+        if v > 0:
+            ax.text(bar.get_x()+bar.get_width()/2, bar.get_height()+0.3,
+                    f'{v:.1f}%', ha='center', fontsize=fs-1, color=C_GRAY)
+    # 今年ラベル（前年比diffは今年が8%以上の場合のみ表示して重なりを防ぐ）
+    top = max(max(v25), max(v26))
     for bar, v, v0 in zip(b2, v26, v25):
-        diff = v-v0
-        ax.text(bar.get_x()+bar.get_width()/2, bar.get_height()+0.4,
-                f'{v:.1f}%'+(f'\n({diff:+.1f}pt)' if abs(diff)>0.5 else ''),
-                ha='center', fontsize=fs,
-                color=C_GREEN if diff>0.5 else (C_RED if diff<-0.5 else C_DARK), fontweight='bold')
+        diff = v - v0
+        show_diff = abs(diff) > 0.5 and v >= 8.0
+        label = f'{v:.1f}%' + (f'\n({diff:+.1f}pt)' if show_diff else '')
+        ax.text(bar.get_x()+bar.get_width()/2, bar.get_height()+0.3,
+                label, ha='center', fontsize=fs,
+                color=C_GREEN if diff > 0.5 else (C_RED if diff < -0.5 else C_DARK),
+                fontweight='bold')
     ax.set_xticks(x)
     ax.set_xticklabels(all_cats, fontsize=fs+1, rotation=rot,
                        ha='right' if rot else 'center')
     ax.set_ylabel('構成比（%）', fontsize=12); ax.legend(fontsize=12)
-    ax.set_ylim(0, max(max(v25),max(v26))+12)
+    ax.set_ylim(0, top + 18)
     ax.grid(axis='y', alpha=0.3, zorder=1); ax.spines[['top','right']].set_visible(False)
     fig.tight_layout(); return _to_buf(fig)
 
