@@ -264,10 +264,23 @@ def ch_category(cat25, cat26):
     all_cats = list(dict.fromkeys([t[0] for t in cat26]+[t[0] for t in cat25]))
     v25 = [next((v for n,v in cat25 if n==c),0) for c in all_cats]
     v26 = [next((v for n,v in cat26 if n==c),0) for c in all_cats]
+
+    # 前年・今年どちらも1%未満のカテゴリを「その他」に束ねる
+    main_cats, main_v25, main_v26 = [], [], []
+    oth25 = oth26 = 0.0
+    for c, a, b in zip(all_cats, v25, v26):
+        if max(a, b) >= 1.0:
+            main_cats.append(c); main_v25.append(a); main_v26.append(b)
+        else:
+            oth25 += a; oth26 += b
+    if oth25 > 0 or oth26 > 0:
+        main_cats.append('その他'); main_v25.append(oth25); main_v26.append(oth26)
+    all_cats, v25, v26 = main_cats, main_v25, main_v26
+
     n = len(all_cats)
     rot  = 40 if n > 5 else 0
-    fs   = max(9, 12 - max(0, n - 5))   # カテゴリ数に応じてフォントを縮小
-    figh = 5.5 if rot else 4.5           # ラベルが斜めの場合は下余白を確保
+    fs   = max(9, 12 - max(0, n - 5))
+    figh = 5.5 if rot else 4.5
     fig, ax = plt.subplots(figsize=(8.5, figh), facecolor='white')
     x = np.arange(n); w = 0.35
     ax.bar(x-w/2, v25, w, label='前年', color=C_GRAY, alpha=0.65, zorder=3)
