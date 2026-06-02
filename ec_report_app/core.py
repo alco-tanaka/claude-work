@@ -16,12 +16,15 @@ from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN
 
-# ── 日本語フォント（環境に合わせて自動選択）──
-for _c in ['Yu Gothic', 'Meiryo', 'MS Gothic', 'Hiragino Sans', 'IPAGothic', 'Noto Sans CJK JP']:
-    _hits = [f for f in fm.fontManager.ttflist if _c.lower() in f.name.lower()]
-    if _hits:
-        plt.rcParams['font.family'] = _hits[0].name
-        break
+# ── 日本語フォント（japanize-matplotlib で自動設定、fallback あり）──
+try:
+    import japanize_matplotlib  # noqa: F401
+except ImportError:
+    for _c in ['Yu Gothic', 'Meiryo', 'MS Gothic', 'Hiragino Sans', 'IPAGothic']:
+        _hits = [f for f in fm.fontManager.ttflist if _c.lower() in f.name.lower()]
+        if _hits:
+            plt.rcParams['font.family'] = _hits[0].name
+            break
 plt.rcParams['axes.unicode_minus'] = False
 
 C_TEAL='#0DB4C6'; C_DARK='#1A2535'; C_GOLD='#F5A623'; C_GREEN='#27AE60'
