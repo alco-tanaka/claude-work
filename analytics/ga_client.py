@@ -14,7 +14,6 @@ ENV_PATH = Path(__file__).parent / ".env"
 SCOPES = [
     "https://www.googleapis.com/auth/analytics.readonly",
     "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive.file",
 ]
 
 
@@ -28,8 +27,8 @@ def load_env() -> dict[str, str]:
             k, _, v = line.partition("=")
             env[k.strip()] = v.strip()
     for key in ["GOOGLE_CREDENTIALS_PATH", "GOOGLE_CREDENTIALS_JSON",
-                "SLACK_WEBHOOK_TEST", "SLACK_WEBHOOK_PROD",
-                "SPREADSHEET_ID", "DRIVE_FOLDER_ID"]:
+                "SLACK_WEBHOOK_TEST", "SLACK_WEBHOOK_PROD", "SLACK_BOT_TOKEN",
+                "SPREADSHEET_ID"]:
         val = os.environ.get(key)
         if val:
             env[key] = val
@@ -54,11 +53,6 @@ def get_ga_client() -> BetaAnalyticsDataClient:
 def get_gspread_client():
     import gspread
     return gspread.authorize(_get_credentials())
-
-
-def get_drive_service():
-    from googleapiclient.discovery import build
-    return build("drive", "v3", credentials=_get_credentials())
 
 
 def run_report(property_id: str, start_date: str, end_date: str,
@@ -154,3 +148,12 @@ def fetch_site_data(property_id: str, year: int, month: int) -> dict:
         "pages": page_rows,
         "period": {"start": start, "end": end, "year": year, "month": month},
     }
+
+
+def fetch_funnel_data(property_id: str, start_date: str, end_date: str) -> dict:
+    """購買ファネルのイベント数を取得する。"""
+    FUNNEL_EVENTS = ["view_item", "add_to_cart", "begin_checkout", "purchase"]
+    rows = run_report(property_id, start_date, end_date,
+                      ["eventCount"], ["eventName"], limit=500)
+    counts = {r.get("eventName", ""): int(r.get("eventCount", 0)) for r in rows}
+    return {e: counts.get(e, 0) for e in FUNNEL_EVENTS}

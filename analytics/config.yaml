@@ -1,4 +1,4 @@
-output_dir: "G:\\共有ドライブ\\820_board\\006　AI\\tanaka\\ai_office\\data\\outputs"
+output_dir: "G:\\共有ドライブ\\820_board\\006　AI\\tanaka\\ai_office\\data\\outputs\\ga4-report"
 
 anomaly:
   spike_threshold: 2.5   # 過去28日平均の2.5倍以上でアラート
@@ -7,29 +7,53 @@ anomaly:
 sites:
   - name: "ALCO online"
     property_id: "260235946"
+    search_console_url: "https://alco-online.jp/"
+    has_ecommerce: true
   - name: "Body Glideオフィシャルサイト"
     property_id: "379237335"
-  - name: "bonicoオンラインショップ楽天市場店"
-    property_id: "384737206"
+    search_console_url: "sc-domain:bodyglide.jp"
+    has_ecommerce: true
   - name: "Ciele Athleticsオフィシャルサイト"
-    property_id: "391529847"
+    property_id: "382724577"
+    search_console_url: "https://jp.cieleathletics.com/"
+    has_ecommerce: true
   - name: "cotopaxiオフィシャルサイト"
     property_id: "321966527"
+    search_console_url: "https://cotopaxi.jp/"
+    has_ecommerce: true
   - name: "feeturesオフィシャルサイト"
     property_id: "321990864"
+    search_console_url: "sc-domain:flowfold.jp"
+    has_ecommerce: true
   - name: "HydroFlaskオフィシャルサイト"
     property_id: "321732797"
+    search_console_url: "https://www.hydroflask.co.jp/"
+    has_ecommerce: true
   - name: "Hypericeオフィシャルサイト"
     property_id: "443690054"
+    search_console_url: "sc-domain:hyperice.jp"
+    has_ecommerce: true
   - name: "Nocs Provisions Japan"
     property_id: "411739573"
+    search_console_url: "https://nocsprovisions.jp/"
+    has_ecommerce: true
   - name: "Nomadixオフィシャルサイト"
     property_id: "321957235"
+    search_console_url: "sc-domain:nomadix.jp"
+    has_ecommerce: true
   - name: "OOFOSオフィシャルサイト"
     property_id: "321977751"
+    search_console_url: "https://oofos.jp/"
+    has_ecommerce: true
   - name: "OTIS Eyewear Japan"
     property_id: "528567944"
+    search_console_url: "sc-domain:otiseyewear.jp"
+    has_ecommerce: true
   - name: "Sun Bum JAPAN"
     property_id: "526067070"
+    search_console_url: "sc-domain:sunbum.jp"
+    has_ecommerce: true
   - name: "TOPO ATHLETICオフィシャルサイト"
     property_id: "322001880"
+    search_console_url: "https://www.topoathletic.jp/"
+    has_ecommerce: true

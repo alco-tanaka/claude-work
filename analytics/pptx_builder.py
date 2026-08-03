@@ -3,24 +3,25 @@ from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN
+from pptx.oxml.ns import qn
 
-# ---- カラー（generate_slides.pyと統一） ----
-C_NAVY   = RGBColor(0x1A, 0x37, 0x6C)
-C_BLUE   = RGBColor(0x2E, 0x86, 0xAB)
-C_LIGHT  = RGBColor(0xF0, 0xF4, 0xF8)
+# ---- カラー（Morning Sky palette） ----
+C_NAVY   = RGBColor(0x22, 0x72, 0xB5)   # rich azure
+C_BLUE   = RGBColor(0x50, 0x96, 0xC8)   # sky blue
+C_LIGHT  = RGBColor(0xEC, 0xF4, 0xFB)   # barely-blue white
 C_WHITE  = RGBColor(0xFF, 0xFF, 0xFF)
 C_BLACK  = RGBColor(0x1A, 0x1A, 0x1A)
-C_GRAY   = RGBColor(0x66, 0x66, 0x66)
-C_LGRAY  = RGBColor(0xE8, 0xE8, 0xE8)
+C_GRAY   = RGBColor(0x5C, 0x6B, 0x7A)   # blue-gray
+C_LGRAY  = RGBColor(0xD3, 0xE4, 0xF0)   # pale blue-gray
 C_GREEN  = RGBColor(0x27, 0xAE, 0x60)
 C_RED    = RGBColor(0xC0, 0x39, 0x2B)
-C_ORANGE = RGBColor(0xE6, 0x7E, 0x22)
-C_PURPLE = RGBColor(0x9B, 0x59, 0xB6)
-C_TEAL   = RGBColor(0x16, 0xA0, 0x85)
-C_COMMENT       = RGBColor(0xFF, 0xF8, 0xE1)
-C_COMMENT_BORDER = RGBColor(0xF5, 0xA6, 0x23)
+C_ORANGE = RGBColor(0xF0, 0x78, 0x55)   # fresh coral
+C_PURPLE = RGBColor(0x8B, 0x7D, 0xB8)   # soft lavender
+C_TEAL   = RGBColor(0x3B, 0xAD, 0x9B)   # refreshing teal
+C_COMMENT       = RGBColor(0xE8, 0xF3, 0xFA)
+C_COMMENT_BORDER = RGBColor(0x22, 0x72, 0xB5)
 
-FONT    = "Meiryo"
+FONT    = "Noto Sans JP"
 SLIDE_W = Inches(13.33)
 SLIDE_H = Inches(7.5)
 
@@ -89,22 +90,27 @@ def comment_box(slide, text, top=Inches(6.55)):
          C_COMMENT, C_COMMENT_BORDER)
     txt(slide, f"ポイント: {text}",
         Inches(0.45), top + Inches(0.08), Inches(12.4), Inches(0.6),
-        size=10.5, color=RGBColor(0x7D, 0x4E, 0x00))
+        size=10.5, color=RGBColor(0x2A, 0x5F, 0x8A))
 
-def table(slide, headers, rows, l, t, w, h, hbg=C_NAVY, alt=C_LIGHT, font_size=10):
+def _vcenter(cell):
+    tcPr = cell._tc.get_or_add_tcPr()
+    tcPr.set(qn('a:anchor'), 'ctr')
+
+def table(slide, headers, rows, l, t, w, h, hbg=C_NAVY, alt=C_LIGHT, font_size=10, col_widths=None):
     if not rows:
         return None
     tbl = slide.shapes.add_table(len(rows) + 1, len(headers), l, t, w, h).table
-    cw = w // len(headers)
+    equal_cw = w // len(headers)
     for i in range(len(headers)):
-        tbl.columns[i].width = cw
+        tbl.columns[i].width = col_widths[i] if col_widths else equal_cw
     for ci, hdr in enumerate(headers):
         cell = tbl.cell(0, ci)
         cell.text = hdr
         cell.fill.solid(); cell.fill.fore_color.rgb = hbg
+        _vcenter(cell)
         p = cell.text_frame.paragraphs[0]
         p.alignment = PP_ALIGN.CENTER
-        r = p.runs[0]
+        r = p.runs[0] if p.runs else p.add_run()
         r.font.name = FONT; r.font.bold = True
         r.font.size = Pt(font_size + 1); r.font.color.rgb = C_WHITE
     for ri, row in enumerate(rows):
@@ -113,9 +119,10 @@ def table(slide, headers, rows, l, t, w, h, hbg=C_NAVY, alt=C_LIGHT, font_size=1
             cell = tbl.cell(ri + 1, ci)
             cell.text = str(val)
             cell.fill.solid(); cell.fill.fore_color.rgb = rbg
+            _vcenter(cell)
             p = cell.text_frame.paragraphs[0]
             p.alignment = PP_ALIGN.CENTER if ci > 0 else PP_ALIGN.LEFT
-            r = p.runs[0]
+            r = p.runs[0] if p.runs else p.add_run()
             r.font.name = FONT; r.font.size = Pt(font_size)
             r.font.color.rgb = C_BLACK
     return tbl
