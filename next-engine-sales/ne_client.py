@@ -91,6 +91,9 @@ def save_tokens(access_token: str, refresh_token: str) -> None:
             time.sleep(2 ** attempt)
     raise RuntimeError(f"トークン保存失敗(5回リトライ後): {last_err}")
 
+MAINTENANCE_RETRIES = 6        # 10分間隔 × 6回 = 最大約1時間待つ
+MAINTENANCE_WAIT_SEC = 600
+
 def ne_post(endpoint: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
     env = load_env()
     body = {"access_token": env.get("NE_ACCESS_TOKEN", ""), "refresh_token": env.get("NE_REFRESH_TOKEN", "")}
@@ -98,6 +101,16 @@ def ne_post(endpoint: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
     resp = requests.post(f"{API_BASE}{endpoint}", data=body, timeout=30)
     resp.raise_for_status()
     data = resp.json()
+
+    # 002007 = NEメンテナンス中。一定間隔で再試行し、終わるまで待つ
+    for _ in range(MAINTENANCE_RETRIES):
+        if not (data.get("result") == "error" and data.get("code") == "002007"):
+            break
+        print(f"NEメンテナンス中(002007)。{MAINTENANCE_WAIT_SEC // 60}分後に再試行します", flush=True)
+        time.sleep(MAINTENANCE_WAIT_SEC)
+        resp = requests.post(f"{API_BASE}{endpoint}", data=body, timeout=30)
+        resp.raise_for_status()
+        data = resp.json()
 
     if data.get("result") == "error" and data.get("code") == "002002":
         body["access_token"] = ""
