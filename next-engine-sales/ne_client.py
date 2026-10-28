@@ -93,6 +93,7 @@ def save_tokens(access_token: str, refresh_token: str) -> None:
 
 MAINTENANCE_RETRIES = 6        # 10分間隔 × 6回 = 最大約1時間待つ
 MAINTENANCE_WAIT_SEC = 600
+MAINTENANCE_CODES = ("002007", "003004")  # 002007=NEメンテ中 / 003004=メイン機能サーバーメンテ中
 
 def ne_post(endpoint: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
     env = load_env()
@@ -102,11 +103,11 @@ def ne_post(endpoint: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
     resp.raise_for_status()
     data = resp.json()
 
-    # 002007 = NEメンテナンス中。一定間隔で再試行し、終わるまで待つ
+    # MAINTENANCE_CODES = NEメンテナンス中。一定間隔で再試行し、終わるまで待つ
     for _ in range(MAINTENANCE_RETRIES):
-        if not (data.get("result") == "error" and data.get("code") == "002007"):
+        if not (data.get("result") == "error" and data.get("code") in MAINTENANCE_CODES):
             break
-        print(f"NEメンテナンス中(002007)。{MAINTENANCE_WAIT_SEC // 60}分後に再試行します", flush=True)
+        print(f"NEメンテナンス中({data.get('code')})。{MAINTENANCE_WAIT_SEC // 60}分後に再試行します", flush=True)
         time.sleep(MAINTENANCE_WAIT_SEC)
         resp = requests.post(f"{API_BASE}{endpoint}", data=body, timeout=30)
         resp.raise_for_status()
