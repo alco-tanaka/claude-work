@@ -1,0 +1,3 @@
+requests
+gspread>=6.0.0
+google-auth

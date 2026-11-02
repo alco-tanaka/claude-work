@@ -1,0 +1,62 @@
+name: Next Engine 在庫スナップショット
+
+on:
+  workflow_dispatch:        # 手動実行のみ（定時実行なし）
+    inputs:
+      brands:
+        description: 'ブランドコードで絞り込む場合（カンマ区切り 例: 089,123）。空なら全件'
+        required: false
+        default: ''
+      dry_run:
+        description: 'true ならシートへ書き込まず取得のみ'
+        required: false
+        default: 'false'
+
+# 売上速報とNEトークンの更新が競合しないよう直列化（売上速報側にも同じ group を足すと確実）
+concurrency:
+  group: ne-token
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: next-engine-sales
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements-stock.txt
+
+      - name: Run stock snapshot
+        env:
+          NE_ACCESS_TOKEN:  ${{ secrets.NE_ACCESS_TOKEN }}
+          NE_REFRESH_TOKEN: ${{ secrets.NE_REFRESH_TOKEN }}
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+          STOCK_SPREADSHEET_ID: 1Cqd62TbT_aB_dsL8CGpyeysRlKAn4nH7wrss9CWDiJw
+          STOCK_BRANDS: ${{ inputs.brands }}
+          NE_TOKEN_OUTPUT: /tmp/ne_tokens.json
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            python stock_snapshot.py --dry-run
+          else
+            python stock_snapshot.py
+          fi
+
+      - name: Refresh NE tokens in Secrets
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          if [ -f /tmp/ne_tokens.json ]; then
+            gh secret set NE_ACCESS_TOKEN --body "$(jq -r .access_token /tmp/ne_tokens.json)"
+            gh secret set NE_REFRESH_TOKEN --body "$(jq -r .refresh_token /tmp/ne_tokens.json)"
+            echo "NEトークンをSecretsに更新しました"
+          fi
