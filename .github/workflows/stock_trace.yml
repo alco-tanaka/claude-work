@@ -1,0 +1,54 @@
+name: Next Engine 在庫履歴の調査（読み取りのみ）
+
+on:
+  workflow_dispatch:
+    inputs:
+      skus:
+        description: 'SKUをカンマ区切りで（例: 8901360990032,5089997101）'
+        required: true
+      since:
+        description: 'この日時以降の履歴を取得'
+        required: false
+        default: '2026-10-27 18:00:00'
+
+concurrency:
+  group: ne-token
+  cancel-in-progress: false
+
+jobs:
+  trace:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: next-engine-sales
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements-stock.txt
+
+      - name: Run stock trace
+        env:
+          NE_ACCESS_TOKEN:  ${{ secrets.NE_ACCESS_TOKEN }}
+          NE_REFRESH_TOKEN: ${{ secrets.NE_REFRESH_TOKEN }}
+          TRACE_SKUS: ${{ inputs.skus }}
+          TRACE_SINCE: ${{ inputs.since }}
+          NE_TOKEN_OUTPUT: /tmp/ne_tokens.json
+        run: python stock_trace.py
+
+      - name: Refresh NE tokens in Secrets
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          if [ -f /tmp/ne_tokens.json ]; then
+            gh secret set NE_ACCESS_TOKEN --body "$(jq -r .access_token /tmp/ne_tokens.json)"
+            gh secret set NE_REFRESH_TOKEN --body "$(jq -r .refresh_token /tmp/ne_tokens.json)"
+            echo "NEトークンをSecretsに更新しました"
+          fi

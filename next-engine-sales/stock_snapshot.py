@@ -53,7 +53,14 @@ def fetch_all(endpoint, params, page_size=500):
 
 def open_spreadsheet():
     import gspread
-    info = json.loads(os.environ["GOOGLE_CREDENTIALS_JSON"])
+    raw = os.environ.get("GOOGLE_CREDENTIALS_JSON", "").strip()
+    if not raw:
+        raise SystemExit("GOOGLE_CREDENTIALS_JSON が空です。リポジトリのSecretsに登録されているか確認してください")
+    try:
+        info = json.loads(raw)
+    except json.JSONDecodeError:
+        raise SystemExit("GOOGLE_CREDENTIALS_JSON がJSONとして読めません（先頭文字: "
+                         f"{raw[:1]!r}）。サービスアカウントキーのJSON全文を登録してください")
     gc = gspread.service_account_from_dict(info)
     return gc.open_by_key(os.environ["STOCK_SPREADSHEET_ID"])
 
