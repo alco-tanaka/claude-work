@@ -1,0 +1,52 @@
+name: 卸フリーマイナスとNE出荷数の照合（読み取りのみ）
+
+on:
+  workflow_dispatch:
+    inputs:
+      since:
+        description: 'この日時以降のNE出荷を集計'
+        required: false
+        default: '2026-10-27 18:00:00'
+
+concurrency:
+  group: ne-token
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: next-engine-sales
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements-stock.txt
+
+      - name: Run check
+        env:
+          NE_ACCESS_TOKEN:  ${{ secrets.NE_ACCESS_TOKEN }}
+          NE_REFRESH_TOKEN: ${{ secrets.NE_REFRESH_TOKEN }}
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+          STOCK_SPREADSHEET_ID: 1Cqd62TbT_aB_dsL8CGpyeysRlKAn4nH7wrss9CWDiJw
+          CHECK_SINCE: ${{ inputs.since }}
+          NE_TOKEN_OUTPUT: /tmp/ne_tokens.json
+        run: python free_minus_check.py
+
+      - name: Refresh NE tokens in Secrets
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          if [ -f /tmp/ne_tokens.json ]; then
+            gh secret set NE_ACCESS_TOKEN --body "$(jq -r .access_token /tmp/ne_tokens.json)"
+            gh secret set NE_REFRESH_TOKEN --body "$(jq -r .refresh_token /tmp/ne_tokens.json)"
+            echo "NEトークンをSecretsに更新しました"
+          fi
