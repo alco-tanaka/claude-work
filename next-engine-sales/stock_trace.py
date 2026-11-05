@@ -10,7 +10,15 @@ from ne_client import ne_post
 
 SKUS = [s.strip() for s in os.environ.get("TRACE_SKUS", "").split(",") if s.strip()]
 SINCE = os.environ.get("TRACE_SINCE", "2026-10-27 18:00:00")
-LIMIT = int(os.environ.get("TRACE_LIMIT", "50"))
+LIMIT = int(os.environ.get("TRACE_LIMIT", "200"))
+HIST_FIELDS = ",".join([
+    "stock_io_history_id", "stock_io_history_date", "stock_io_history_goods_id",
+    "stock_io_history_before_stock_quantity", "stock_io_history_after_stock_quantity",
+    "stock_io_history_quantity", "stock_io_history_io_flag",
+    "stock_io_history_io_type_id", "stock_io_history_io_type_name",
+    "stock_io_history_reason", "stock_io_history_cut_form_id",
+    "stock_io_history_pic_name", "stock_io_history_creator_name",
+])
 
 
 def main():
@@ -19,17 +27,22 @@ def main():
     for sku in SKUS:
         print(f"===== {sku} (since {SINCE}) =====")
         # 在庫マスタ（現在値）
-        st = ne_post("/api_v1_master_stock/search", {"stock_goods_id-eq": sku}).get("data", [])
+        st = ne_post("/api_v1_master_stock/search", {
+            "fields": "stock_goods_id,stock_quantity,stock_allocation_quantity,stock_free_quantity",
+            "stock_goods_id-eq": sku,
+        }).get("data", [])
         for r in st:
             print("[master_stock]", json.dumps(r, ensure_ascii=False))
-        # 入出庫履歴（フィールド指定なし = 全項目）
+        # 入出庫履歴（NE APIは fields 指定が必須）
         d = ne_post("/api_v1_master_stockiohistory/search", {
+            "fields": HIST_FIELDS,
             "stock_io_history_goods_id-eq": sku,
             "stock_io_history_date-gte": SINCE,
+            "stock_io_history_deleted_flag-eq": "0",
             "limit": LIMIT,
         })
-        rows = d.get("data", [])
-        print(f"[stockiohistory] {len(rows)}件")
+        rows = sorted(d.get("data", []), key=lambda r: r.get("stock_io_history_date", ""))
+        print(f"[stockiohistory] {len(rows)}件 (入出庫日の昇順)")
         for r in rows:
             print(json.dumps(r, ensure_ascii=False))
 
