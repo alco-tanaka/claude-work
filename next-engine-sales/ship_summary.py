@@ -7,14 +7,20 @@ NEは読み取りのみ。
   他は stock_snapshot.py と共通
 """
 from __future__ import annotations
-import os
+import os, re
 from collections import defaultdict, Counter
 from datetime import datetime
 from ne_client import ne_post
 from stock_snapshot import open_spreadsheet, read_jan_sku_map, fetch_all, to_int, JST
 
-SINCE = os.environ.get("SHIP_SINCE", "2026-10-27 18:00:00")
-UNTIL = os.environ.get("SHIP_UNTIL", "").strip()
+def _clean_dt(s: str) -> str:
+    """入力に余計な文字が混ざっても yyyy-mm-dd[ hh:mm:ss] の部分だけを使う"""
+    m = re.search(r"\d{4}-\d{2}-\d{2}(?: \d{2}:\d{2}:\d{2})?", s or "")
+    return m.group(0) if m else ""
+
+
+SINCE = _clean_dt(os.environ.get("SHIP_SINCE", "")) or "2026-10-27 18:00:00"
+UNTIL = _clean_dt(os.environ.get("SHIP_UNTIL", ""))
 SHEET_OUT = "出荷集計(臨時)"
 HIST_FIELDS = ",".join([
     "stock_io_history_id", "stock_io_history_date", "stock_io_history_goods_id",
